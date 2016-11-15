@@ -8,7 +8,8 @@ Learning GraphQL with GitHub API and Express.
 
 ## Examples
 In localhost, you can make calls to the GitHub API like this:
-```{
+``` javascript
+{
   gitHubUser(username: "yourUserNameGoesHere") {
     login,
     avatar_url,
@@ -23,5 +24,6 @@ In localhost, you can make calls to the GitHub API like this:
       }
     }
   }
-}```
+}
+```
 Additional options are available. To look at these, check out ./data/schema.js file.
