@@ -26,4 +26,4 @@ In localhost, you can make calls to the GitHub API like this:
   }
 }
 ```
-Additional options are available. To look at these, check out ./data/schema.js file.
+Additional options are available. To look at these, check out the ./data/schema.js file.
