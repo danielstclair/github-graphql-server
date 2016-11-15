@@ -1,3 +1,4 @@
+import axios from 'axios';
 import {
   GraphQLSchema,
   GraphQLObjectType,
@@ -10,28 +11,114 @@ import {
   GraphQLFloat
 } from 'graphql';
 
+function usersFollowing() {
+  return {
+      type: new GraphQLList(RepoInfoType),
+      description: "Fields about the people you this person follows",
+      resolve: (obj) => {
+        const brackIndex = obj.following_url.indexOf("{"),
+              url =  obj.following_url.slice(0, brackIndex);
+        return axios.get(url)
+                    .then(function(response) {
+                      return response.data;
+                    });
+      }
+  };
+}
+
+function followingUrl() {
+  return {
+    type: GraphQLString,
+    description: "URI to get data on the people this person follows",
+    resolve: (obj) => {
+      const brackIndex = obj.following_url.indexOf("{");
+      return obj.following_url.slice(0, brackIndex);
+    }
+  };
+}
+
+const RepoInfoType = new GraphQLObjectType({
+  name: "RepoInfo",
+  description: "Owner information on a repo",
+  fields: () => ({
+    "login": { type: GraphQLString },
+    "id": { type: GraphQLInt },
+    "avatar_url": { type: GraphQLString },
+    "gravatar_id": { type: GraphQLString },
+    "url": { type: GraphQLString },
+    "html_url": { type: GraphQLString },
+    "followers_url": { type: GraphQLString },
+    "following_url": followingUrl(),
+    "gists_url": { type: GraphQLString },
+    "starred_url": { type: GraphQLString },
+    "subscriptions_url": { type: GraphQLString },
+    "organizations_url": { type: GraphQLString },
+    "repos_url": { type: GraphQLString },
+    "events_url": { type: GraphQLString },
+    "received_events_url": { type: GraphQLString },
+    "type": { type: GraphQLString },
+    "site_admin": { type: GraphQLString },
+    "users_following": usersFollowing()
+  })
+});
+
+const UserInfoType = new GraphQLObjectType({
+  name: "UserInfo",
+  description: "Basic information on a GitHub user",
+  fields: () => ({
+    "login": { type: GraphQLString },
+    "id": { type: GraphQLInt },
+    "avatar_url": { type: GraphQLString },
+    "gravatar_id": { type: GraphQLString },
+    "url": { type: GraphQLString },
+    "html_url": { type: GraphQLString },
+    "followers_url": { type: GraphQLString },
+    "following_url": followingUrl(),
+    "users_following": usersFollowing(),
+    "gists_url": { type: GraphQLString },
+    "starred_url": { type: GraphQLString },
+    "subscriptions_url": { type: GraphQLString },
+    "organizations_url": { type: GraphQLString },
+    "repos_url": { type: GraphQLString },
+    "events_url": { type: GraphQLString },
+    "received_events_url": { type: GraphQLString },
+    "type": { type: GraphQLString },
+    "site_admin": { type: GraphQLBoolean },
+    "name": { type: GraphQLString },
+    "company": { type: GraphQLString },
+    "blog": { type: GraphQLString },
+    "location": { type: GraphQLString },
+    "email": { type: GraphQLString },
+    "hireable": { type: GraphQLBoolean },
+    "bio": { type: GraphQLString },
+    "public_repos": { type: GraphQLInt },
+    "public_gists": { type: GraphQLInt },
+    "followers": { type: GraphQLInt },
+    "following": { type: GraphQLInt },
+    "created_at": { type: GraphQLString },
+    "updated_at": { type: GraphQLString },
+  })
+});
+
 const query = new GraphQLObjectType({
   name: 'Query',
   description: 'First GraphQL Server Config - YAY!',
   fields: () => ({
-    hello: {
-      type: GraphQLString,
-      description: 'Accepts a name so you can say hi to.',
+    gitHubUser: {
+      type: UserInfoType,
+      description: "GitHub user API data with enhanced and additional data",
       args: {
-        name: {
+        username: {
           type: new GraphQLNonNull(GraphQLString),
-          description: 'Name you want to say hi to.'
+          description: "The GitHub user login you want information on."
         }
       },
-      resolve: (_,args) => {
-        return `Hello, ${args.name}!`;
-      }
-    },
-    luckyNumber: {
-      type: GraphQLInt,
-      description: 'A lucky number',
-      resolve: () => {
-        return 888;
+      resolve: (_,{ username }) => {
+        const url = `https://api.github.com/users/${username}`;
+        return axios.get(url)
+          .then((response) => {
+            return response.data;
+          });
       }
     }
   })
